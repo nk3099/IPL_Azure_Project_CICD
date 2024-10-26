@@ -1,0 +1,37 @@
+
+trigger:
+  - main
+
+variables:
+  - group: dbw-cicd-dev
+  - group: dbw-cicd-PROD
+
+  - name: vmImageName
+    value: "windows-latest"
+  - name: notebooksPath
+    value: "Notebooks"
+
+#microsoft hosted agents -- pool (compute power to execute cicd pipeline)
+#https://learn.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=azure-devops&tabs=yaml
+pool:
+  vmImage: $(vmImageName)
+
+steps:
+  - template: templates/deploy-notebooks.yml
+    parameters:
+      stageId: "Deploy_to_Dev_Environment"
+      env: "dev"
+      environmentName: $(dev-environment-name)
+      resourceGroupName: $(dev-resource-group-name)
+      serviceConnection: $(dev-service-connection-name)
+      notebooksPath: $(dev-notebooksPath)
+  
+  - template: templates/deploy-notebooks.yml
+    parameters:
+      dependsOn: ["Deploy_to_Dev_Environment"]
+      stageId: "Deploy_to_PROD_Environment"
+      env: "PROD"
+      environmentName: $(PROD-environment-name)
+      resourceGroupName: $(PROD-resource-group-name)
+      serviceConnection: $(PROD-service-connection-name)
+      notebooksPath: $(dev-notebooksPath)
